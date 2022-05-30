@@ -46,11 +46,12 @@ architecture behavioral of aes_ip is
 
     constant n_bytes: integer := 16;
     constant byte_len: integer := 8;
-    type aes_port is array (n_byte - 1 downto 0) of std_logic_vector (byte_len - 1 downto 0);
+    type aes_bytes is array (n_byte - 1 downto 0) of std_logic_vector (byte_len - 1 downto 0);
 
-    constant key: aes_port := (others => (others => '1'));
-    signal in_bytes: aes_port;
-    signal out_bytes: aes_port;
+    constant key: aes_bytes := (others => (others => '1'));
+    signal in_bytes: aes_bytes;
+    signal interm_bytes: aes_bytes;
+    signal out_bytes: aes_bytes;
 
 begin
 
@@ -63,17 +64,27 @@ begin
     end process input_conversion;
 
 
-    xor_key: process (ck, rst)
+    add_round_key: process (ck, rst)
+    begin
+        if rst = '1' then
+            interm_bytes <= (others => (others => '0'));
+        elsif rising_edge(ck) then
+            for idx in n_bytes - 1 downto 0
+            loop
+                interm_bytes(idx) <= in_bytes(idx) xor key(idx);
+            end loop;
+        end if;  
+    end process add_round_key;
+
+
+    other_ops: process (ck, rst)
     begin
         if rst = '1' then
             out_bytes <= (others => (others => '0'));
         elsif rising_edge(ck) then
-            for idx in n_bytes - 1 downto 0
-            loop
-                out_bytes(idx) <= in_bytes(idx) xor key(idx);
-            end loop;
-        end if;  
-    end process xor_key;
+            out_bytes <= interm_bytes; 
+        end if;
+    end process;
 
 
     output_conversion: process (out_bytes)
