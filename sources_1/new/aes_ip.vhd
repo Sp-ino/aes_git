@@ -70,7 +70,7 @@ begin
         elsif rising_edge(ck) then
             for idx in n_bytes - 1 downto 0
             loop
-                out_bytes(idx) <= in_bytes(idx) ^ key(idx);
+                out_bytes(idx) <= in_bytes(idx) xor key(idx);
             end loop;
         end if;  
     end process xor_key;
