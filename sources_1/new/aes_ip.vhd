@@ -35,31 +35,39 @@ use IEEE.std_logic_1164.all;
 
 
 entity aes_ip is
-    Port ( textin : in std_logic_vector (127 downto 0);
-           rst : in std_logic;
-           ck : in std_logic;
-           textout : out std_logic_vector (127 downto 0));
+    port (
+        textin : in std_logic_vector (127 downto 0);
+        rst : in std_logic;
+        ck : in std_logic;
+        textout : out std_logic_vector (127 downto 0)
+    );
 end aes_ip;
 
 
 architecture behavioral of aes_ip is
 
     constant n_bytes: integer := 16;
+    constant n_rows: integer := 4;
+    constant n_cols: integer := 4;
     constant byte_len: integer := 8;
-    type aes_bytes is array (n_byte - 1 downto 0) of std_logic_vector (byte_len - 1 downto 0);
+    type aes_rows is array (n_cols - 1 downto 0) of std_logic_vector (byte_len - 1 downto 0);
+    type aes_matrix is array (n_rows - 1 downto 0) of aes_rows;
 
-    constant key: aes_bytes := (others => (others => '1'));
-    signal in_bytes: aes_bytes;
-    signal interm_bytes: aes_bytes;
-    signal out_bytes: aes_bytes;
+    constant key: aes_matrix := (others => (others => (others => '1')));
+    signal in_bytes: aes_matrix;
+    signal interm_bytes: aes_matrix;
+    signal out_bytes: aes_matrix;
 
 begin
 
     input_conversion: process (textin)
     begin
-        for idx in n_bytes - 1 downto 0
+        for idx_r in n_rows downto 1
         loop
-            in_bytes(idx) <= textin(byte_len*idx - 1 downto byte_len*(idx - 1));
+            for idx_c in n_cols downto 1
+            loop
+                in_bytes(idx_r)(idx_c) <= textin(byte_len*(idx_c + idx_r * n_cols) - 1 downto byte_len*(idx_c + idx_r * n_cols - 1));
+            end loop;
         end loop;
     end process input_conversion;
 
@@ -67,11 +75,14 @@ begin
     add_round_key: process (ck, rst)
     begin
         if rst = '1' then
-            interm_bytes <= (others => (others => '0'));
+            interm_bytes <= (others => (others => (others => '0')));
         elsif rising_edge(ck) then
-            for idx in n_bytes - 1 downto 0
+            for idx_r in n_rows downto 1
             loop
-                interm_bytes(idx) <= in_bytes(idx) xor key(idx);
+                for idx_c in n_cols downto 1
+                loop
+                    interm_bytes(idx_r)(idx_c) <= in_bytes(idx_r)(idx_c) xor key(idx_r)(idx_c);
+                end loop;
             end loop;
         end if;  
     end process add_round_key;
@@ -80,7 +91,7 @@ begin
     other_ops: process (ck, rst)
     begin
         if rst = '1' then
-            out_bytes <= (others => (others => '0'));
+            out_bytes <= (others => (others => (others => '0')));
         elsif rising_edge(ck) then
             out_bytes <= interm_bytes; 
         end if;
@@ -89,9 +100,12 @@ begin
 
     output_conversion: process (out_bytes)
     begin
-        for idx in n_bytes - 1 downto 0
+        for idx_r in n_rows downto 1
         loop
-            textout(byte_len*idx - 1 downto byte_len*(idx - 1)) <= out_bytes(idx);
+            for idx_c in n_cols downto 1
+            loop
+                textout(byte_len*(idx_c + idx_r * n_cols) - 1 downto byte_len*(idx_c + idx_r * n_cols - 1)) <= in_bytes(idx_r)(idx_c) ;
+            end loop;
         end loop;
     end process output_conversion;
 
