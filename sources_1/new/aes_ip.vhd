@@ -53,7 +53,7 @@ architecture behavioral of aes_ip is
     type aes_rows is array (n_cols - 1 downto 0) of std_logic_vector (byte_len - 1 downto 0);
     type aes_matrix is array (n_rows - 1 downto 0) of aes_rows;
 
-    constant key: aes_matrix := (others => (others => (others => '1')));
+    constant key: aes_matrix := (others => (others => (others => '11010101')));
     signal in_bytes: aes_matrix;
     signal interm_bytes: aes_matrix;
     signal out_bytes: aes_matrix;
@@ -62,11 +62,11 @@ begin
 
     input_conversion: process (textin)
     begin
-        for idx_r in n_rows downto 1
+        for idx_r in n_rows - 1 downto 0
         loop
-            for idx_c in n_cols downto 1
+            for idx_c in n_cols - 1 downto 0
             loop
-                in_bytes(idx_r)(idx_c) <= textin(byte_len*(idx_c + idx_r * n_cols) - 1 downto byte_len*(idx_c + idx_r * n_cols - 1));
+                in_bytes(idx_r)(idx_c) <= textin(byte_len*(idx_c + idx_r * n_cols + 1) - 1 downto byte_len*(idx_c + idx_r * n_cols));
             end loop;
         end loop;
     end process input_conversion;
@@ -77,9 +77,9 @@ begin
         if rst = '1' then
             interm_bytes <= (others => (others => (others => '0')));
         elsif rising_edge(ck) then
-            for idx_r in n_rows downto 1
+            for idx_r in n_rows - 1 downto 0
             loop
-                for idx_c in n_cols downto 1
+                for idx_c in n_cols - 1 downto 0
                 loop
                     interm_bytes(idx_r)(idx_c) <= in_bytes(idx_r)(idx_c) xor key(idx_r)(idx_c);
                 end loop;
@@ -100,11 +100,11 @@ begin
 
     output_conversion: process (out_bytes)
     begin
-        for idx_r in n_rows downto 1
+        for idx_r in n_rows - 1 downto 0
         loop
-            for idx_c in n_cols downto 1
+            for idx_c in n_cols - 1 downto 0
             loop
-                textout(byte_len*(idx_c + idx_r * n_cols) - 1 downto byte_len*(idx_c + idx_r * n_cols - 1)) <= in_bytes(idx_r)(idx_c) ;
+                textout(byte_len*(idx_c + idx_r * n_cols + 1) - 1 downto byte_len*(idx_c + idx_r * n_cols)) <= in_bytes(idx_r)(idx_c) ;
             end loop;
         end loop;
     end process output_conversion;
