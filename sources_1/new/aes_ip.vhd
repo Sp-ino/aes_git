@@ -25,8 +25,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.ALL;
 
 library xil_defaultlib;
-use xil_defaultlib.definitions.all;
-
+use xil_defaultlib.aes_pkg.all;
+use xil_defaultlib.utils.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -80,7 +80,11 @@ begin
         if i_rst = '1' then
             r_out_bytes <= (others => (others => (others => '0')));
         elsif rising_edge(i_ck) then
-            r_out_bytes <= r_interm_bytes; 
+            for idx_r in n_rows - 1 downto 0 loop
+                for idx_c in n_cols - 1 downto 0 loop
+                    r_out_bytes(idx_r)(idx_c) <= rotr(r_interm_bytes(idx_r)(idx_c), 3);
+                end loop;
+            end loop; 
         end if;
     end process;
 
