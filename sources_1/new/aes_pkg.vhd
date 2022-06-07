@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 
 
 
-package definitions is
+package aes_pkg is
 
     constant n_bytes: integer := 16;
     constant n_rows: integer := 4;
@@ -16,13 +16,11 @@ package definitions is
 
     function in_conversion(tin: std_logic_vector (msg_len - 1 downto 0)) return aes_matrix;    
     function out_conversion(out_bytes: aes_matrix) return std_logic_vector;
-    function rotl(byte: std_logic_vector (byte_len - 1 downto 0); amount: integer) return std_logic_vector;
-    function rotr(byte: std_logic_vector (byte_len - 1 downto 0); amount: integer) return std_logic_vector;
 
-end definitions;
+end aes_pkg;
 
 
-package body definitions is
+package body aes_pkg is
 
     function in_conversion(tin: std_logic_vector (msg_len - 1 downto 0)) return aes_matrix is
     -- Converts a std_logic_vector of length 128 to a 4-by-4 matrix of 8-bit std_logic_vector
@@ -55,4 +53,4 @@ package body definitions is
 
     end out_conversion;
 
-end definitions;
+end aes_pkg;
