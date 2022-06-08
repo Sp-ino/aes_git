@@ -47,7 +47,7 @@ architecture Behavioral of tb is
     end component;
     
     constant tck: time := 10 ns;
-    constant in1: integer := 4096;
+    constant in1: integer := 1;
     constant in2: integer := 1234556;
 
     signal clock: std_logic;
@@ -78,12 +78,12 @@ begin
     begin
         reset <= '1';
         wait for 1*tck;
-        tin <= std_logic_vector(to_unsigned(in1, 128));
+        tin <= std_logic_vector(to_unsigned(in2, 128));
         wait for 1*tck;
         reset <= '0';
         
-        wait for 3*tck/2;
-        tin <= std_logic_vector(to_unsigned(in2, 128));
+        wait for tck/2;
+        tin <= std_logic_vector(to_unsigned(in1, 128));
         wait for tck/2;
 
         wait for 2*tck;
